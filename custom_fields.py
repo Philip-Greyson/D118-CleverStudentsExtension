@@ -27,19 +27,19 @@ badnames = ['USE','TEST','TESTSTUDENT','TEST STUDENT','TESTTT','TESTT','TESTTEST
 with oracledb.connect(user=un, password=pw, dsn=cs) as con:
     with con.cursor() as cur:  # start an entry cursor
         with open('students_ext.csv', 'w') as outputfile:  # open the output file
-            print("Connection established: " + con.version)
+            print("Database connection established: " + con.version)
             print('sis_id,ext.el,ext.flyerconnect', file=outputfile)  # print header line in output file
             # open a second file for the log output
             outputLog = open('custom_log.txt', 'w')
             try:
                 print("Connection established: " + con.version, file=outputLog)
-                # get the student info for students that are currently active, really just student id number and dcid to pass to other queries
-                cur.execute('SELECT student_number, dcid, first_name, last_name FROM students WHERE enroll_status = 0 ORDER BY dcid DESC')
+                # get the student info for students that are currently active and not pre-registered, really just student id number and dcid to pass to other queries
+                cur.execute('SELECT student_number, dcid, first_name, last_name FROM students WHERE enroll_status = 0 AND NOT schoolid = 901 ORDER BY dcid DESC')
                 rows = cur.fetchall()  # fetchall() is used to fetch all records from result set and store the data from the query into the rows variable
                 # go through each entry (which is a tuple) in rows. Each entrytuple is a single student's data
                 for entrytuple in rows:
                     try:
-                        print(entrytuple)  # debug
+                        #print(entrytuple)  # debug
                         print(entrytuple, file=outputLog)  # debug
                         entry = list(entrytuple) #convert the tuple which is immutable to a list which we can edit. Now entry[] is an array/list of the student data
                         if not str(entry[2]) in badnames and not str(entry[3]) in badnames: #check first and last name against array of bad names, only print if both come back not in it
@@ -68,4 +68,14 @@ with oracledb.connect(user=un, password=pw, dsn=cs) as con:
                 print('High Level Unknown Error: '+str(er))
                 print('High Level Unknown Error: '+str(er), file=outputLog)
 
+with pysftp.Connection(sftpHOST, username=sftpUN, password=sftpPW, cnopts=cnopts) as sftp:
+    print('SFTP connection established')
+    # print(sftp.pwd) # debug, show what folder we connected to
+    # print(sftp.listdir())  # debug, show what other files/folders are in the current directory
+    sftp.chdir('./extensionfields')  # change to the extensionfields folder
+    # print(sftp.pwd) # debug, make sure out changedir worked
+    # print(sftp.listdir())
+    sftp.put('students_ext.csv') #upload the file onto the sftp server
+    print("Custom field file placed on remote server")
+    print("Custom field file placed on remote server", file=outputLog)
 outputLog.close()
