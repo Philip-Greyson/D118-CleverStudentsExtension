@@ -34,7 +34,7 @@ with oracledb.connect(user=un, password=pw, dsn=cs) as con:
             try:
                 print("Connection established: " + con.version, file=outputLog)
                 # get the student info for students that are currently active and not pre-registered, really just student id number and dcid to pass to other queries
-                cur.execute('SELECT student_number, dcid, first_name, last_name FROM students WHERE enroll_status = 0 AND NOT schoolid = 901 ORDER BY dcid DESC')
+                cur.execute('SELECT student_number, dcid, first_name, last_name, id FROM students WHERE enroll_status = 0 AND NOT schoolid = 901 ORDER BY dcid DESC')
                 rows = cur.fetchall()  # fetchall() is used to fetch all records from result set and store the data from the query into the rows variable
                 # go through each entry (which is a tuple) in rows. Each entrytuple is a single student's data
                 for entrytuple in rows:
@@ -45,6 +45,7 @@ with oracledb.connect(user=un, password=pw, dsn=cs) as con:
                         if not str(entry[2]) in badnames and not str(entry[3]) in badnames: #check first and last name against array of bad names, only print if both come back not in it
                             idNum = int(entry[0]) #what we would refer to as their "ID Number" aka 6 digit number starting with 22xxxx or 21xxxx
                             stuDCID = str(entry[1])
+                            stuID = str(entry[4])
                             #get the custom field saying if they transitioned out of EL
                             cur.execute('SELECT EL_Transitioned FROM U_DEF_EXT_STUDENTS0 WHERE studentsdcid = ' + stuDCID) 
                             transitionResults = cur.fetchall()
@@ -60,7 +61,7 @@ with oracledb.connect(user=un, password=pw, dsn=cs) as con:
                             #print(lep)  # debug
                             print(lep, file=outputLog)  # debug
                             # print final values out to output file for each student
-                            print(str(idNum) + ',' + transitioned + ',' + lep, file=outputfile)
+                            print(stuID + ',' + transitioned + ',' + lep, file=outputfile)
                     except Exception as err:
                         print('Unknown Error on ' + str(entrytuple[0]) + ': ' + str(err))
                         print('Unknown Error on ' + str(entrytuple[0]) + ': ' + str(err), file=outputLog)
