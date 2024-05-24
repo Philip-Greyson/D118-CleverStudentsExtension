@@ -28,9 +28,10 @@ Additionally, the following Python libraries must be installed on the host machi
 
 You will need to change where the LEP information comes from and how it is processed if you are not in IL, as we use the IL demographics table which will not exist on other PowerSchool instances.
 You will also need to have the EL transitioned status in a custom field, we use u_def_ext_students0.el_transitioned to store it with the string of "transitioned" if they are no longer in the EL program. If you use a different table and field, you will need to edit the SQL query to match.
+Finally, you will also need to have the counselor name and email in a custom field, we use u_studentsuserfields.custom_counselor and .custom_counselor_email. If you use a different table and field, you will need to edit the SQL query to match.
 
 ## Customization
 
-The script is pretty barebones and only has the 2 custom fields we want in Clever, but it can be used as a framework for other things you might want. Besides the processing of the fields mentioned above in the requirements section, the script should just work.
+The script is pretty barebones and only has the 5 custom fields we want in Clever, but it can be used as a framework for other things you might want. Besides the processing of the fields mentioned above in the requirements section, the script should just work.
 
 - If you want to add any other  fields to the output, you will need to add them to the header, change the SQL query to retrieve them, process them, and them add them to the output line in the same field order as the header row.
