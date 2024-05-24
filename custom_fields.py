@@ -42,32 +42,42 @@ if __name__ == '__main__':  # main file execution
         print(f'INFO: Execution started at {startTime}')
         print(f'INFO: Execution started at {startTime}', file=log)
         with open(OUTPUT_FILE_NAME, 'w') as output:  # open the output file
-            print('sis_id,ext.el,ext.flyerconnect', file=output)  # print header line in output file
+            print('sis_id,ext.el,ext.flyerconnect,ext.counselor_email,ext.counselor_first,ext.counselor_last', file=output)  # print header line in output file
             try:
                 with oracledb.connect(user=DB_UN, password=DB_PW, dsn=DB_CS) as con:  # create the connecton to the database
                     with con.cursor() as cur:  # start an entry cursor
                         print(f'INFO: Connection established to PS database on version: {con.version}')
                         print(f'INFO: Connection established to PS database on version: {con.version}', file=log)
                         # get the student info for students that are currently active and not pre-registered, really just student id number and dcid to pass to other queries
-                        cur.execute('SELECT stu.student_number, stu.dcid, stu.first_name, stu.last_name, stu.id, ext.el_transitioned, il.lep FROM students stu\
+                        cur.execute('SELECT stu.student_number, stu.dcid, stu.first_name, stu.last_name, stu.id, ext.el_transitioned, il.lep, stufields.custom_counselor, stufields.custom_counselor_email FROM students stu\
                         LEFT JOIN u_def_ext_students0 ext ON stu.dcid = ext.studentsdcid\
                         LEFT JOIN s_il_stu_x il ON stu.dcid = il.studentsdcid\
+                        LEFT JOIN u_studentsuserfields stufields ON stu.dcid = stufields.studentsdcid\
                         WHERE stu.enroll_status = 0 ORDER BY stu.dcid DESC')
                         students = cur.fetchall()  # fetchall() is used to fetch all records from result set and store the data from the query into the rows variable
                         # go through each entry (which is a tuple) in rows. Each entrytuple is a single student's data
                         for student in students:
                             try:
                                 if not str(student[2]).lower() in badnames and not str(student[3]).lower() in badnames:  # check first and last name against array of bad names, only print if both come back not in it
-                                    print(f'DBUG: Starting student {student[0]} with transitioned: {student[5]} and lep: {student[6]}')
-                                    print(f'DBUG: Starting student {student[0]} with transitioned: {student[5]} and lep: {student[6]}', file=log)
+                                    print(f'DBUG: Starting student {student[0]} with transitioned: {student[5]} and lep: {student[6]}, counselor {student[7]}')
+                                    print(f'DBUG: Starting student {student[0]} with transitioned: {student[5]} and lep: {student[6]}, counselor {student[7]}', file=log)
                                     idNum = int(student[0])  # what we would refer to as their "ID Number" aka 6 digit number starting with 22xxxx or 21xxxx
                                     stuDCID = str(student[1])
                                     stuID = str(student[4])
                                     transitioned = "Y" if str(student[5]) == "Transitioned" else "N"  # set the output to Y if it has the string of "Transitioned" otherwise N
                                     lep = "Y" if student[6] == 1 else "N"  # convert 0/1/Null to Y/N
+                                    counselor = student[7]
+                                    counselorEmail = str(student[8]) if student[8] else ''  # get the counselor email if it exists, otherwise its just a blank
+                                    counselorFirst = ''  # reset counselor information to blanks each time to remove carryover between students if they dont have a counselor
+                                    counselorLast = ''  # reset counselor information to blanks each time to remove carryover between students if they dont have a counselor
+                                    if counselor:  # if there is a counselor in the custom field from PS, split their name into first and last
+                                        counselorFirst = counselor.split(' ')[0]  # split the counselor name by a space, take the first part as their first name
+                                        counselorLast = counselor.split(' ')[1]  # same as first name but with the second part for their last name
+                                        print(f'DBUG: Counselor name of {counselor} gets split to first name {counselorFirst} and last name {counselorLast}, email of {counselorEmail}')
+                                        print(f'DBUG: Counselor name of {counselor} gets split to first name {counselorFirst} and last name {counselorLast}, email of {counselorEmail}', file=log)
 
                                     # print final values out to output file for each student
-                                    print(f'{stuID},{transitioned},{lep}', file=output)
+                                    print(f'{stuID},{transitioned},{lep},{counselorEmail},{counselorFirst},{counselorLast}', file=output)
                             except Exception as er:
                                 print(f'ERROR while processing student {student[0]}: {er}')
                                 print(f'ERROR while processing student {student[0]}: {er}', file=log)
@@ -96,4 +106,3 @@ if __name__ == '__main__':  # main file execution
         endTime = endTime.strftime('%H:%M:%S')
         print(f'INFO: Execution ended at {endTime}')
         print(f'INFO: Execution ended at {endTime}', file=log)
-
