@@ -95,7 +95,7 @@ if __name__ == '__main__':  # main file execution
                 sftp.chdir(OUTPUT_FILE_DIRECTORY)  # change to the extensionfields folder
                 # print(sftp.pwd) # debug, make sure out changedir worked
                 # print(sftp.listdir())
-                # sftp.put(OUTPUT_FILE_NAME)  # upload the file onto the sftp server
+                sftp.put(OUTPUT_FILE_NAME)  # upload the file onto the sftp server
                 print("INFO: Custom field file placed on remote server")
                 print("INFO: Custom field file placed on remote server", file=log)
         except Exception as er:
